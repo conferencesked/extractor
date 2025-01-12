@@ -1,0 +1,17 @@
+name: my-python-api  # Name of the service
+type: service
+configuration:
+  runtime: "custom"  # Indicates that this is a custom Docker-based service
+  source:
+    type: docker  # Docker-based source
+    dockerfile: Dockerfile  # Dockerfile for building the service
+  ports:
+    - protocol: http
+      target: 8000  # Target port inside the container (matches Dockerfile EXPOSE)
+      published: true  # Expose this port to the public
+resources:
+  cpu: 0.5  # Minimum CPU resources (in cores)
+  memory: 256Mi  # Minimum memory (in MiB)
+  replicas: 1  # Initial number of instances
+endpoints:
+  publicUrl: true  # Enable public access to the service
