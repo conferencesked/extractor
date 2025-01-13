@@ -1,17 +1,45 @@
-# Use an official Python runtime as the base image
-FROM python:3.10-slim
+# Development stage
+FROM python:3.10-alpine AS development
 
-# Set the working directory
-WORKDIR /app
+WORKDIR /python-docker
 
-# Copy project files to the container
-COPY . /app
+# Install necessary build dependencies for Alpine
+RUN apk add --no-cache gcc musl-dev libffi-dev
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the requirements file and install dependencies
+COPY requirements.txt requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Expose the application port (default for FastAPI is 8000)
+# Copy the application code
+COPY . .
+
+# Run tests (adjust `test_app.py` if not applicable)
+CMD ["python3", "test_app.py", "-v"]
+
+# Production stage
+FROM python:3.10-alpine AS production
+
+WORKDIR /python-docker
+
+# Install necessary runtime dependencies for Alpine
+RUN apk add --no-cache libffi libressl
+
+# Copy the requirements file and install dependencies
+COPY requirements.txt requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Copy only necessary application files
+COPY . .
+
+# Create a new user with UID 10016 for security
+RUN addgroup -g 10016 choreo && \
+    adduser --disabled-password --no-create-home --uid 10016 --ingroup choreo choreouser
+
+# Switch to the non-root user
+USER 10016
+
+# Expose the Flask default port
 EXPOSE 5000
 
-# Run the FastAPI app with Uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the Flask application
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
