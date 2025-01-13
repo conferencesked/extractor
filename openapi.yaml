@@ -1,113 +1,187 @@
 openapi: 3.0.3
 info:
-  title: Website Data Extractor API
+  title: Choreo Samples - Reading List - Python REST API
   description: >-
-    This API extracts relevant data from a given website URL, including Title, Description, Event details, Organizer info, and more.
+    This is a sample API specification for a simple reading list application with in-memory cache
+    written in Python.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
+externalDocs:
+  description: Choreo
+  url: https://choreo.dev
 servers:
-  - url: http://localhost:8000
+  - url: http://localhost:5000
+tags:
+  - name: books
+    description: In-memory book list cache API
+  - name: url
+    description: URL processing API
 paths:
-  /extract:
-    post:
-      summary: Extract data from a website
-      description: >-
-        Accepts a URL and extracts relevant information such as title, description, and event details.
-      operationId: ExtractWebsiteData
-      requestBody:
-        description: Website URL to extract data from
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ExtractRequest"
+  /books:
+    summary: List all books
+    get:
+      summary: List all books
+      operationId: ListAllBooks
+      tags:
+        - books
       responses:
         "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ExtractResponse"
-        "400":
-          description: Bad request (e.g., invalid URL)
-  /health:
-    get:
-      summary: Health check
-      description: Check if the service is running.
+                $ref: "#/components/schemas/StringArray"
+    post:
+      summary: Insert a new book
+      operationId: InstallNewBook
       responses:
         "200":
-          description: Service is healthy
+          description: Successful operation
+        "400":
+          description: Invalid request body
+      tags:
+        - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KeyValue"
+
+  /books/{id}:
+    summary: Get book by ID
+    get:
+      tags:
+        - books
+      summary: Get book by ID
+      operationId: GetBookById
+      parameters:
+        - name: id
+          in: path
+          description: id of book to return
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyValue"
+        "404":
+          description: id not found
+    delete:
+      tags:
+        - books
+      summary: Delete book by id
+      description: Deletes a single book based on the id supplied
+      operationId: DeleteBookById
+      parameters:
+        - name: id
+          in: path
+          description: id of book to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+        "404":
+          description: Id not found
+    put:
+      tags:
+        - books
+      summary: Update book status by id
+      description: Updates the status of the book based on the id supplied
+      operationId: UpdateBookStatusById
+      parameters:
+        - name: id
+          in: path
+          description: id of book to update
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful operation
+        "404":
+          description: id not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Status"
+
+  /process-url:
+    summary: Process a URL
+    get:
+      tags:
+        - url
+      summary: Process a URL
+      operationId: ProcessUrl
+      description: Accepts a URL as input and returns the modified URL string with "www" and ".com" removed.
+      parameters:
+        - name: url
+          in: query
+          description: URL to be processed
+          required: true
+          schema:
+            type: string
+            example: "www.example.com"
+      responses:
+        "200":
+          description: Successful operation
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  status:
+                  processed_url:
                     type: string
-                    example: "healthy"
+                    example: "example"
+
+  /healthz:
+    summary: Healthcheck endpoint
+    get:
+      summary: Healthcheck
+      operationId: Healthcheck
+      responses:
+        "200":
+          description: Healthy response
+
 components:
   schemas:
-    ExtractRequest:
+    Key:
       type: object
       properties:
-        url:
+        id:
           type: string
-          example: "https://example.com/event-page"
-          description: The URL of the website to extract data from.
-    ExtractResponse:
+          example: "my-id"
+    Status:
       type: object
       properties:
-        title:
+        status:
           type: string
-          example: "International Conference on AI"
-        description:
+          example: "read"
+    KeyValue:
+      type: object
+      required:
+        - name
+        - author
+        - status
+      properties:
+        name:
           type: string
-          example: "A conference focusing on advancements in AI."
-        eventCategory:
+          example: "my-name"
+        author:
           type: string
-          example: "Technology"
-        eventType:
+          example: "my-author"
+        status:
           type: string
-          example: "Online"
-        country:
-          type: string
-          example: "USA"
-        city:
-          type: string
-          example: "New York"
-        organizer:
-          type: string
-          example: "Tech World Inc."
-        contactPerson:
-          type: string
-          example: "John Doe"
-        email:
-          type: string
-          example: "contact@techworld.com"
-        website:
-          type: string
-          example: "https://techworld.com"
-        startDate:
-          type: string
-          format: date
-          example: "2025-03-15"
-        endDate:
-          type: string
-          format: date
-          example: "2025-03-18"
-        deadline:
-          type: string
-          format: date
-          example: "2025-01-31"
-        keywords:
-          type: array
-          items:
-            type: string
-          example: ["AI", "Technology", "Conference"]
-        highlights:
-          type: array
-          items:
-            type: string
-          example: ["Keynote speech by Dr. Smith", "Panel discussions"]
-        venue:
-          type: string
-          example: "Grand Hall, New York"
+          example: "read"
+    StringArray:
+      type: array
+      items:
+        type: string
