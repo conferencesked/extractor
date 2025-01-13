@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: Website Data Extractor API
+  description: >-
+    This API extracts relevant data from a given website URL, including Title, Description, Event details, Organizer info, and more.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+paths:
+  /extract:
+    post:
+      summary: Extract data from a website
+      description: >-
+        Accepts a URL and extracts relevant information such as title, description, and event details.
+      operationId: ExtractWebsiteData
+      requestBody:
+        description: Website URL to extract data from
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractRequest"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractResponse"
+        "400":
+          description: Bad request (e.g., invalid URL)
+  /health:
+    get:
+      summary: Health check
+      description: Check if the service is running.
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+components:
+  schemas:
+    ExtractRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          example: "https://example.com/event-page"
+          description: The URL of the website to extract data from.
+    ExtractResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "International Conference on AI"
+        description:
+          type: string
+          example: "A conference focusing on advancements in AI."
+        eventCategory:
+          type: string
+          example: "Technology"
+        eventType:
+          type: string
+          example: "Online"
+        country:
+          type: string
+          example: "USA"
+        city:
+          type: string
+          example: "New York"
+        organizer:
+          type: string
+          example: "Tech World Inc."
+        contactPerson:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          example: "contact@techworld.com"
+        website:
+          type: string
+          example: "https://techworld.com"
+        startDate:
+          type: string
+          format: date
+          example: "2025-03-15"
+        endDate:
+          type: string
+          format: date
+          example: "2025-03-18"
+        deadline:
+          type: string
+          format: date
+          example: "2025-01-31"
+        keywords:
+          type: array
+          items:
+            type: string
+          example: ["AI", "Technology", "Conference"]
+        highlights:
+          type: array
+          items:
+            type: string
+          example: ["Keynote speech by Dr. Smith", "Panel discussions"]
+        venue:
+          type: string
+          example: "Grand Hall, New York"
