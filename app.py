@@ -1,50 +1,66 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import requests
-from bs4 import BeautifulSoup
-import spacy
+from flask import Flask, jsonify, request
 
-# Initialize FastAPI app
-app = FastAPI()
+app = Flask(__name__)
 
-# Load an NLP model (spaCy)
-nlp = spacy.load("en_core_web_sm")  # Use a language model like spaCy
+books = []
 
-# Define a data model for the API request
-class URLRequest(BaseModel):
-    url: str
+# Helper function to generate IDs
+def generate_id():
+    return len(books) + 1
 
-# Route to extract event data
-@app.post("/extract")
-async def extract_event_data(request: URLRequest):
-    try:
-        # Step 1: Fetch the webpage content
-        response = requests.get(request.url, timeout=10)
-        if response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Unable to fetch URL content.")
-        
-        html_content = response.text
-        
-        # Step 2: Parse the HTML with BeautifulSoup
-        soup = BeautifulSoup(html_content, "html.parser")
-        data = {}
+# Endpoint to get all books
+@app.route('/reading-list/books', methods=['GET'])
+def get_books():
+    return jsonify({'books': books})
 
-        # Extract Title
-        data['title'] = soup.title.string if soup.title else "N/A"
-        
-        # Extract Meta Description
-        description_tag = soup.find("meta", attrs={"name": "description"})
-        data['description'] = description_tag["content"] if description_tag else "N/A"
+# Endpoint to add a new book
+@app.route('/reading-list/books', methods=['POST'])
+def add_book():
+    data = request.get_json()
+    book = {
+        'id': generate_id(),
+        'author': data['author'],
+        'name': data['name'],
+        'status': data['status']
+    }
+    books.append(book)
+    return jsonify(book)
 
-        # Step 3: NLP Analysis (extract entities)
-        doc = nlp(html_content)
-        data['entities'] = [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+# Endpoint to get a book by ID
+@app.route('/reading-list/books/<int:book_id>', methods=['GET'])
+def get_book(book_id):
+    for book in books:
+        if book['id'] == book_id:
+            return jsonify(book)
+    return '', 404
 
-        # Example for extracting dates and event-related info
-        data['dates'] = [ent.text for ent in doc.ents if ent.label_ == "DATE"]
-        data['locations'] = [ent.text for ent in doc.ents if ent.label_ == "GPE"]  # GPE = Geo-Political Entity (countries, cities)
+# Endpoint to delete a book by ID
+@app.route('/reading-list/books/<int:book_id>', methods=['DELETE'])
+def delete_book(book_id):
+    global books
+    books = [book for book in books if book['id'] != book_id]
+    return '', 204
 
-        return data
+# Endpoint to update a book status by ID
+@app.route('/reading-list/books/<int:book_id>', methods=['PUT'])
+def update_book_status(book_id):
+    data = request.get_json()
+    for book in books:
+        if book['id'] == book_id:
+            book['status'] = data['status']
+            return jsonify(book)
+    return '', 404
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# New endpoint to process a URL and return a formatted string
+@app.route('/process-url', methods=['GET'])
+def process_url():
+    url = request.args.get('url')
+    if not url:
+        return jsonify({'error': 'URL parameter is required'}), 400
+
+    # Remove 'www.' and '.com' from the URL
+    processed_url = url.replace('www.', '').replace('.com', '')
+    return jsonify({'processed_url': processed_url})
+
+if __name__ == '__main__':
+    app.run()
