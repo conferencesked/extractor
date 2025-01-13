@@ -1,66 +1,93 @@
-from flask import Flask, jsonify, request
+import unittest
+import json
+from app import app
 
-app = Flask(__name__)
+class TestReadingListApp(unittest.TestCase):
 
-books = []
+    def setUp(self):
+        self.app = app.test_client()
+        self.books = []
 
-# Helper function to generate IDs
-def generate_id():
-    return len(books) + 1
+    def test_get_empty_book_list(self):
+        response = self.app.get('/reading-list/books')
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['books'], [])
 
-# Endpoint to get all books
-@app.route('/reading-list/books', methods=['GET'])
-def get_books():
-    return jsonify({'books': books})
+    def test_add_book(self):
+        new_book = {
+            'author': 'John Doe',
+            'name': 'Sample Book',
+            'status': 'unread'
+        }
+        response = self.app.post('/reading-list/books', json=new_book)
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('id', data)
+        self.assertEqual(data['author'], new_book['author'])
+        self.assertEqual(data['name'], new_book['name'])
+        self.assertEqual(data['status'], new_book['status'])
+        self.books.append(data)
 
-# Endpoint to add a new book
-@app.route('/reading-list/books', methods=['POST'])
-def add_book():
-    data = request.get_json()
-    book = {
-        'id': generate_id(),
-        'author': data['author'],
-        'name': data['name'],
-        'status': data['status']
-    }
-    books.append(book)
-    return jsonify(book)
+    def test_get_single_book(self):
+        new_book = {
+            'author': 'Jane Smith',
+            'name': 'Another Book',
+            'status': 'read'
+        }
+        response = self.app.post('/reading-list/books', json=new_book)
+        data = json.loads(response.get_data(as_text=True))
+        book_id = data['id']
 
-# Endpoint to get a book by ID
-@app.route('/reading-list/books/<int:book_id>', methods=['GET'])
-def get_book(book_id):
-    for book in books:
-        if book['id'] == book_id:
-            return jsonify(book)
-    return '', 404
+        response = self.app.get(f'/reading-list/books/{book_id}')
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['id'], book_id)
+        self.assertEqual(data['author'], new_book['author'])
+        self.assertEqual(data['name'], new_book['name'])
+        self.assertEqual(data['status'], new_book['status'])
 
-# Endpoint to delete a book by ID
-@app.route('/reading-list/books/<int:book_id>', methods=['DELETE'])
-def delete_book(book_id):
-    global books
-    books = [book for book in books if book['id'] != book_id]
-    return '', 204
+    def test_delete_book(self):
+        new_book = {
+            'author': 'Mark Johnson',
+            'name': 'Yet Another Book',
+            'status': 'in-progress'
+        }
+        response = self.app.post('/reading-list/books', json=new_book)
+        data = json.loads(response.get_data(as_text=True))
+        book_id = data['id']
 
-# Endpoint to update a book status by ID
-@app.route('/reading-list/books/<int:book_id>', methods=['PUT'])
-def update_book_status(book_id):
-    data = request.get_json()
-    for book in books:
-        if book['id'] == book_id:
-            book['status'] = data['status']
-            return jsonify(book)
-    return '', 404
+        response = self.app.delete(f'/reading-list/books/{book_id}')
+        self.assertEqual(response.status_code, 204)
 
-# New endpoint to process a URL and return a formatted string
-@app.route('/process-url', methods=['GET'])
-def process_url():
-    url = request.args.get('url')
-    if not url:
-        return jsonify({'error': 'URL parameter is required'}), 400
+        response = self.app.get(f'/reading-list/books/{book_id}')
+        self.assertEqual(response.status_code, 404)
 
-    # Remove 'www.' and '.com' from the URL
-    processed_url = url.replace('www.', '').replace('.com', '')
-    return jsonify({'processed_url': processed_url})
+    def test_update_book_status(self):
+        new_book = {
+            'author': 'Sara Lee',
+            'name': 'Cookbook',
+            'status': 'unread'
+        }
+        response = self.app.post('/reading-list/books', json=new_book)
+        data = json.loads(response.get_data(as_text=True))
+        book_id = data['id']
+
+        updated_status = 'in-progress'
+        update_data = {'status': updated_status}
+
+        response = self.app.put(f'/reading-list/books/{book_id}', json=update_data)
+        data = json.loads(response.get_data(as_text=True))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data['id'], book_id)
+        self.assertEqual(data['status'], updated_status)
+
+    def tearDown(self):
+        # Clean up by deleting the test books
+        for book in self.books:
+            response = self.app.delete(f"/reading-list/books/{book['id']}")
+            self.assertEqual(response.status_code, 204)
 
 if __name__ == '__main__':
-    app.run()
+    unittest.main()
