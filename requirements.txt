@@ -1,5 +1,2 @@
-fastapi
-uvicorn
-requests
-beautifulsoup4
-spacy
+Flask>=2.0.2
+gunicorn>=20.0.4
