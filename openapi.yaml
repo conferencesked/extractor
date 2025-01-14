@@ -117,7 +117,7 @@ paths:
   /reading-list/books/process-url/{url}:
     get:
       tags:
-        - Books
+        - books
       summary: Process a URL
       operationId: processUrl
       description: Accepts a URL as input and returns the modified URL string with "www" and ".com" removed.
