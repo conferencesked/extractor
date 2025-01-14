@@ -124,7 +124,7 @@ paths:
       description: Accepts a URL as input and returns the modified URL string with "www" and ".com" removed.
       parameters:
         - name: url
-          in: query
+          in: path
           description: URL to be processed
           required: true
           schema:
