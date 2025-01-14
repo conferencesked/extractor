@@ -52,7 +52,7 @@ def update_book_status(book_id):
     return '', 404
 
 # New endpoint to process a URL and return a formatted string
-@app.route('/process-url', methods=['GET'])
+@app.route('/process-url/<path:url>', methods=['GET'])
 def process_url():
     url = request.args.get('url')
     if not url:
