@@ -142,34 +142,6 @@ paths:
         '400':
           description: Bad request, missing or invalid URL.              
 
-  /process-url/{url}:
-    summary: Process a URL
-    get:
-      tags:
-        - url
-      summary: Process a URL
-      operationId: ProcessUrl
-      description: Accepts a URL as input and returns the modified URL string with "www" and ".com" removed.
-      parameters:
-        - name: url
-          in: path
-          description: URL to be processed
-          required: true
-          schema:
-            type: string
-            example: "www.example.com"
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  processed_url:
-                    type: string
-                    example: "example"
-
   /healthz:
     summary: Healthcheck endpoint
     get:
