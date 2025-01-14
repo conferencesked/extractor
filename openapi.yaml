@@ -113,6 +113,34 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/Status"
+  
+  /reading-list/books/process-url/{url}:
+    get:
+      tags:
+        - Books
+      summary: Process a URL
+      operationId: processUrl
+      description: Accepts a URL as input and returns the modified URL string with "www" and ".com" removed.
+      parameters:
+        - name: url
+          in: path
+          required: true
+          description: The URL to process.
+          schema:
+            type: string
+            example: "www.example.com"
+      responses:
+        '200':
+          description: Successfully processed the URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  processed_url:
+                    type: string
+        '400':
+          description: Bad request, missing or invalid URL.              
 
   /process-url/{url}:
     summary: Process a URL
