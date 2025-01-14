@@ -33,7 +33,18 @@ def get_book(book_id):
         if book['id'] == book_id:
             return jsonify(book)
     return '', 404
-
+    
+# New endpoint to process a URL within the books service
+@app.route('/reading-list/books/process-url/<path:url>', methods=['GET'])
+def process_url(url):
+    """
+    Accepts a URL as a route parameter and processes it by
+    removing 'www.' and '.com'.
+    """
+    # Remove 'www.' and '.com' from the URL
+    processed_url = url.replace('www.', '').replace('.com', '')
+    return jsonify({'processed_url': processed_url})
+    
 # Endpoint to delete a book by ID
 @app.route('/reading-list/books/<int:book_id>', methods=['DELETE'])
 def delete_book(book_id):
