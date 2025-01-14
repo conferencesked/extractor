@@ -20,7 +20,6 @@ tags:
     description: URL processing API
 paths:
   /books:
-    summary: List all books
     get:
       summary: List all books
       operationId: ListAllBooks
@@ -48,11 +47,10 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/KeyValue"
-              
- /books/process-url/{url}:
+  /books/process-url/{url}:
     get:
       tags:
-        - books
+        - url
       summary: Process a URL
       operationId: processUrl
       description: Accepts a URL as input and returns the modified URL string with "www" and ".com" removed.
@@ -60,7 +58,7 @@ paths:
         - name: url
           in: path
           required: true
-          description: The URL to process.
+          description: The URL to process. Ensure the URL is URL-encoded (e.g., `www.example.com` becomes `www%2Eexample%2Ecom`).
           schema:
             type: string
             example: "www.example.com"
@@ -75,17 +73,14 @@ paths:
                   processed_url:
                     type: string
         '400':
-          description: Bad request, missing or invalid URL.              
-
+          description: Bad request, missing or invalid URL.
   /healthz:
-    summary: Healthcheck endpoint
     get:
       summary: Healthcheck
       operationId: Healthcheck
       responses:
         "200":
           description: Healthy response
-
 components:
   schemas:
     Key:
