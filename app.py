@@ -62,18 +62,5 @@ def update_book_status(book_id):
             return jsonify(book)
     return '', 404
 
-# New endpoint to process a URL and return a formatted string
-@app.route('/process-url/<path:url>', methods=['GET'])
-def process_url(url):
-    # Validate if the 'url' route parameter is provided
-    if not url:
-        return jsonify({'error': 'URL route parameter is required'}), 400
-
-    # Process the URL by removing 'www.' and '.com'
-    processed_url = url.replace('www.', '').replace('.com', '')
-
-    # Return the processed URL
-    return jsonify({'processed_url': processed_url})
-
 if __name__ == '__main__':
     app.run()
